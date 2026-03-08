@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="dashboard-bg">
+
+<div class="dashboard-card">
+
+<h2>📁 Mini Drive Dashboard</h2>
+
+<!-- ALERT -->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+
+<div class="alert {{category}}">
+{{message}}
+</div>
+
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- DRAG DROP UPLOAD -->
+
+<form action="{{url_for('upload')}}" method="POST" enctype="multipart/form-data" id="uploadForm">
+
+<div class="drop-zone" id="dropZone">
+
+<p>Drag & Drop File Here</p>
+
+<input type="file" name="file" id="fileInput" required>
+
+<select name="access">
+<option value="private">Private</option>
+<option value="public">Public</option>
+</select>
+
+</div>
+
+<button class="upload-btn">Upload File</button>
+
+</form>
+
+<!-- STORAGE BAR -->
+
+<div class="storage-box">
+
+<p>Storage Used: {{total_size}} MB / 100 MB</p>
+
+<div class="storage-bar">
+<div class="storage-fill" style="width: {{ (total_size/100)*100 }}%"></div>
+</div>
+
+</div>
+
+<!-- PROGRESS BAR -->
+
+<div class="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+
+<!-- SEARCH BAR -->
+
+<input type="text" id="searchInput" placeholder="Search files..." onkeyup="searchFiles()" class="search-box">
+
+<!-- FILE TABLE -->
+
+<table class="file-table">
+
+<tr>
+<th>File</th>
+<th>Access</th>
+<th>Actions</th>
+</tr>
+
+{% for file in files %}
+
+<tr class="file-row">
+
+<td>
+
+<!-- FILE PREVIEW -->
+
+<a href="/uploads/{{file.filename}}" target="_blank">
+
+{% if file.filename.endswith('.pdf') %}
+📕
+{% elif file.filename.endswith('.png') or file.filename.endswith('.jpg') %}
+🖼️
+{% elif file.filename.endswith('.zip') %}
+🗜️
+{% elif file.filename.endswith('.mp4') %}
+🎬
+{% else %}
+📄
+{% endif %}
+
+{{file.filename}}
+
+</a>
+
+</td>
+
+<td>{{file.access_type}}</td>
+
+<td>
+
+<a href="{{url_for('download',file_id=file.id)}}" class="btn download">Download</a>
+
+<a href="{{url_for('delete_file',file_id=file.id)}}" 
+class="btn delete"
+onclick="return confirm('Delete this file?')">Delete</a>
+
+<button onclick="copyLink('{{request.host_url}}share/{{file.share_token}}')" class="btn share">
+Share
+</button>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+</div>
+
+<script>
+
+// UPLOAD PROGRESS
+
+const form = document.getElementById("uploadForm");
+const progressBar = document.getElementById("progressBar");
+
+form.addEventListener("submit", function(e){
+
+e.preventDefault();
+
+let formData = new FormData(form);
+
+let xhr = new XMLHttpRequest();
+
+xhr.open("POST", "/upload", true);
+
+xhr.upload.onprogress = function(e){
+
+if(e.lengthComputable){
+
+let percent = (e.loaded / e.total) * 100;
+
+progressBar.style.width = percent + "%";
+
+}
+
+};
+
+xhr.onload = function(){
+
+if(xhr.status == 200){
+
+location.reload();
+
+}
+
+};
+
+xhr.send(formData);
+
+});
+
+
+// SEARCH FUNCTION
+
+function searchFiles(){
+
+let input = document.getElementById("searchInput").value.toLowerCase();
+
+let rows = document.getElementsByClassName("file-row");
+
+for(let i=0;i<rows.length;i++){
+
+let text = rows[i].innerText.toLowerCase();
+
+if(text.includes(input)){
+rows[i].style.display="";
+}else{
+rows[i].style.display="none";
+}
+
+}
+
+}
+
+
+// DRAG DROP
+
+let dropZone = document.getElementById("dropZone");
+let fileInput = document.getElementById("fileInput");
+
+dropZone.addEventListener("dragover", function(e){
+e.preventDefault();
+dropZone.style.background="#eef";
+});
+
+dropZone.addEventListener("dragleave", function(){
+dropZone.style.background="white";
+});
+
+dropZone.addEventListener("drop", function(e){
+
+e.preventDefault();
+
+fileInput.files = e.dataTransfer.files;
+
+dropZone.style.background="white";
+
+});
+// COPY SHARE LINK
+
+function copyLink(link){
+
+navigator.clipboard.writeText(link)
+
+alert("Share link copied!")
+
+}
+
+</script>
+
+{% endblock %}
