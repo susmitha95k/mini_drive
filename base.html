@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title or "Mini Drive" }}</title>
+
+    <!-- ✅ CORRECT CSS PATH -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Background Overlay -->
+    <div class="background-overlay"></div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      {% if category == 'success' %}
+        <div class="success-overlay">
+            <div class="success-box">
+                <div class="checkmark">✓</div>
+                <h2>Success!</h2>
+                <p>{{ message }}</p>
+            </div>
+        </div>
+
+        <script>
+            setTimeout(() => {
+                window.location.href = "{{ url_for('login') }}";
+            }, 2500);
+        </script>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+    {% block content %}{% endblock %}
+    <script>
+function startLoading(button) {
+    button.classList.add("btn-loading");
+}
+</script>
+<script>
+const uploadForm = document.getElementById("uploadForm");
+
+if (uploadForm) {
+    uploadForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const fileInput = document.getElementById("fileInput");
+        const access = document.getElementById("accessSelect").value;
+        const progressWrapper = document.getElementById("progressWrapper");
+        const progressBar = document.getElementById("progressBar");
+        const uploadBtn = document.getElementById("uploadBtn");
+
+        if (!fileInput.files.length) return;
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        formData.append("access", access);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "{{ url_for('upload') }}", true);
+
+        progressWrapper.style.display = "block";
+        uploadBtn.classList.add("btn-loading");
+
+        xhr.upload.onprogress = function (e) {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percent + "%";
+                progressBar.textContent = percent + "%";
+            }
+        };
+
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                progressBar.textContent = "Completed ✓";
+                setTimeout(() => {
+                    window.location.reload();
+                }, 800);
+            }
+        };
+
+        xhr.send(formData);
+    });
+}
+</script>
+
+</body>
+</html>

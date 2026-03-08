@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Register | Mini Drive{% endblock %}
+
+{% block content %}
+
+<!-- Register page background -->
+<div class="register-bg"></div>
+
+<div class="login-card">
+    <h2>Create Account</h2>
+    <p class="subtitle">Secure cloud storage access</p>
+
+    <form method="POST">
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit" onclick="startLoading(this)">
+    <span>Register</span>
+</button>
+    </form>
+
+    <p class="link-text">
+        Already have an account?
+        <a href="{{ url_for('login') }}">Login</a>
+    </p>
+</div>
+
+{% endblock %}
